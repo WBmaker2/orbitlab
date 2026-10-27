@@ -1,5 +1,5 @@
 import type { AppState, LayersState } from '../../app/state';
-import { formatDateKo } from '../../astro/time';
+import { formatDateKo, TIME_ZONE_LABEL_KO } from '../../astro/time';
 import {
   CONCEPT_COLOR,
   CONCEPT_LABEL_KO,
@@ -115,7 +115,7 @@ export class Teacher {
                       <span data-ref="student-answer" class="muted">아직 제출하지 않음</span>
                     </div>
                     <div class="teacher-scene-row">
-                      <span class="muted">장면 날짜: ${formatDateKo(mission.setup.days)} UTC</span>
+                      <span class="muted">장면 날짜: ${formatDateKo(mission.setup.days)} ${TIME_ZONE_LABEL_KO}</span>
                       <button type="button" class="btn btn-secondary btn-small" data-action="preview" data-mission-id="${mission.id}">이 장면 탐구하기</button>
                     </div>
                   </div>

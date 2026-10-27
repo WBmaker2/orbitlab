@@ -1,6 +1,8 @@
 import { expect, test } from '@playwright/test';
 import {
   bootWithCleanState,
+  currentKoreaDateText,
+  currentKoreaTimeText,
   reloadKeepingState,
   timelineDate,
   topDate,
@@ -12,15 +14,37 @@ test.describe('explore', () => {
     await bootWithCleanState(page);
   });
 
-  test('shows the epoch scene, season, phase and scale warning', async ({ page }) => {
-    await expect(topDate(page)).toHaveText('2026년 3월 20일');
-    await expect(page.locator('[data-ref="top-season"]')).toContainText('북 봄');
-    await expect(page.locator('[data-ref="top-season"]')).toContainText('남 가을');
+  test('starts at the current Korean date and time with the scale warning', async ({ page }) => {
+    await expect(topDate(page)).toHaveText(currentKoreaDateText());
+    await expect(page.locator('[data-ref="top-time"]')).toHaveText(/^\d{2}:\d{2} KST$/);
     await expect(page.locator('[data-ref="status-phase"]')).toBeVisible();
     await expect(page.locator('#scale-badge')).toContainText('실제 축척 아님');
     await expect(page.locator('#scale-badge')).toBeVisible();
-    await expect(page.locator('[data-ref="diagram-text"]')).toContainText('북반구는 봄');
     await expect(page.locator('body')).toContainText('실제 일식·월식 예보가 아닙니다');
+  });
+
+  test('shows the epoch scene, season and phase', async ({ page }) => {
+    await page.locator('#slot-time input[type="range"]').fill('0');
+    await expect(timelineDate(page)).toHaveText('2026년 3월 20일');
+    await expect(topDate(page)).toHaveText('2026년 3월 20일');
+    await expect(page.locator('[data-ref="top-season"]')).toContainText('북 봄');
+    await expect(page.locator('[data-ref="top-season"]')).toContainText('남 가을');
+    await expect(page.locator('[data-ref="diagram-text"]')).toContainText('북반구는 봄');
+  });
+
+  test('returns to the current Korean time with the now button', async ({ page }) => {
+    await page.locator('#slot-time input[type="range"]').fill('0');
+    await expect(timelineDate(page)).toHaveText('2026년 3월 20일');
+
+    await page.getByRole('button', { name: '현재 시각으로 이동' }).click();
+    await expect(page.locator('#toast')).toContainText('현재 시각으로 이동했습니다');
+    await expect(topDate(page)).toHaveText(currentKoreaDateText());
+    const shownTime = (await page.locator('[data-ref="top-time"]').textContent()) ?? '';
+    const [shownHour, shownMinute] = shownTime.match(/\d{2}:\d{2}/)![0].split(':').map(Number);
+    const [expectedHour, expectedMinute] = currentKoreaTimeText().split(':').map(Number);
+    const minuteGap = Math.abs(shownHour * 60 + shownMinute - (expectedHour * 60 + expectedMinute));
+    expect(Math.min(minuteGap, 1440 - minuteGap)).toBeLessThanOrEqual(1);
+    await expect(page.locator('#slot-time input[type="range"]')).not.toHaveValue('0');
   });
 
   test('scrubs the timeline and jumps to season boundaries', async ({ page }) => {

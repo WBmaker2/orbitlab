@@ -6,11 +6,12 @@ import {
   type SpeedPresetId,
 } from '../../astro/constants';
 import {
-  daysToDate,
   formatDateKo,
   formatDateTimeKo,
   formatTimeKo,
+  koreaYearForDays,
   seasonBoundariesForYear,
+  TIME_ZONE_LABEL_KO,
 } from '../../astro/time';
 
 export interface TimelineCallbacks {
@@ -18,6 +19,7 @@ export interface TimelineCallbacks {
   onScrub: (days: number) => void;
   onSpeedChange: (speedId: SpeedPresetId) => void;
   onJumpSeason: (kind: 'spring' | 'summer' | 'autumn' | 'winter') => void;
+  onNow: () => void;
 }
 
 export interface TimelineOptions {
@@ -30,6 +32,7 @@ export class Timeline {
   private readonly playText: HTMLElement;
   private readonly dateMain: HTMLElement;
   private readonly dateSub: HTMLElement;
+  private readonly nowButton: HTMLButtonElement;
   private readonly speed: HTMLSelectElement;
   private readonly range: HTMLInputElement;
   private readonly markers: HTMLElement;
@@ -58,6 +61,10 @@ export class Timeline {
           <span class="timeline-date-main" data-ref="date-main"></span>
           <span class="timeline-date-sub" data-ref="date-sub"></span>
         </div>
+        <button class="now-btn" type="button" data-ref="now" aria-label="현재 시각으로 이동" title="현재 시각으로 이동">
+          <span class="now-icon" aria-hidden="true"></span>
+          <span class="now-text">현재</span>
+        </button>
         <label class="speed-control">
           <span class="sr-only">시간 속도</span>
           <select data-ref="speed" aria-label="시간 속도"></select>
@@ -87,6 +94,7 @@ export class Timeline {
     this.playText = this.root.querySelector<HTMLElement>('[data-ref="play-text"]')!;
     this.dateMain = this.root.querySelector<HTMLElement>('[data-ref="date-main"]')!;
     this.dateSub = this.root.querySelector<HTMLElement>('[data-ref="date-sub"]')!;
+    this.nowButton = this.root.querySelector<HTMLButtonElement>('[data-ref="now"]')!;
     this.speed = this.root.querySelector<HTMLSelectElement>('[data-ref="speed"]')!;
     this.range = this.root.querySelector<HTMLInputElement>('[data-ref="range"]')!;
     this.markers = this.root.querySelector<HTMLElement>('[data-ref="markers"]')!;
@@ -100,6 +108,7 @@ export class Timeline {
     }
 
     this.playButton.addEventListener('click', () => this.callbacks.onTogglePlay());
+    this.nowButton.addEventListener('click', () => this.callbacks.onNow());
     this.speed.addEventListener('change', () => {
       this.callbacks.onSpeedChange(this.speed.value as SpeedPresetId);
     });
@@ -133,7 +142,7 @@ export class Timeline {
     if (!this.scrubbing) this.range.value = String(days);
     this.range.setAttribute('aria-valuetext', formatDateTimeKo(days));
     this.dateMain.textContent = formatDateKo(days);
-    this.dateSub.textContent = `${formatTimeKo(days)} UTC`;
+    this.dateSub.textContent = `${formatTimeKo(days)} ${TIME_ZONE_LABEL_KO}`;
     this.playButton.setAttribute('aria-pressed', String(state.time.playing));
     this.playButton.setAttribute(
       'aria-label',
@@ -148,7 +157,7 @@ export class Timeline {
     this.hint.hidden = !disabled;
     if (disabled) this.hint.textContent = disabledMessage ?? '';
 
-    const year = daysToDate(days).getUTCFullYear();
+    const year = koreaYearForDays(days);
     if (this.markerYear !== year) {
       this.markerYear = year;
       this.renderMarkers(year);
@@ -160,6 +169,7 @@ export class Timeline {
     this.disabled = disabled;
     this.root.classList.toggle('is-disabled', disabled);
     this.playButton.disabled = disabled;
+    this.nowButton.disabled = disabled;
     this.speed.disabled = disabled;
     this.range.disabled = disabled;
     for (const button of this.jumpButtons) button.disabled = disabled;

@@ -19,12 +19,14 @@ import { seasonInfoForDays, type SeasonInfo } from '../astro/seasons';
 import { subSolarPoint } from '../astro/orbits';
 import {
   clampSimDays,
-  daysToDate,
+  currentSimDays,
   formatDateKo,
   formatDateShortKo,
   formatHoursKo,
   formatTimeKo,
+  koreaYearForDays,
   seasonBoundariesForYear,
+  TIME_ZONE_LABEL_KO,
 } from '../astro/time';
 import type { CameraFocus, CameraPreset } from '../render/CameraRig';
 import { SceneManager } from '../render/SceneManager';
@@ -206,8 +208,8 @@ export class App {
     });
 
     const validIds = new Set(MISSIONS.map((mission) => mission.id));
+    base.time.days = clampSimDays(progress ? progress.lastDays : currentSimDays());
     if (progress) {
-      base.time.days = clampSimDays(progress.lastDays);
       base.time.speedId = progress.speedId;
       base.view = progress.view;
       base.layers = { ...base.layers, ...progress.layers };
@@ -548,6 +550,7 @@ export class App {
       onScrub: (days: number) => this.setDays(days),
       onSpeedChange: (speedId: SpeedPresetId) => this.setSpeed(speedId),
       onJumpSeason: (kind: 'spring' | 'summer' | 'autumn' | 'winter') => this.jumpSeason(kind),
+      onNow: () => this.jumpToNow(),
     };
   }
 
@@ -759,7 +762,7 @@ export class App {
     eclipse: EclipseStatus,
   ): void {
     this.el.topDate.textContent = formatDateKo(days);
-    this.el.topTime.textContent = `${formatTimeKo(days)} UTC`;
+    this.el.topTime.textContent = `${formatTimeKo(days)} ${TIME_ZONE_LABEL_KO}`;
     this.el.topSeason.textContent = `북 ${season.northernLabelKo} · 남 ${season.southernLabelKo}`;
     this.setSeasonClass(this.el.topSeason, season);
     this.el.topPhase.textContent = `${phase.nameKo} ${formatIllumination(phase)}`;
@@ -777,7 +780,7 @@ export class App {
     eclipse: EclipseStatus,
   ): void {
     this.el.statusDate.textContent = formatDateKo(days);
-    this.el.statusTime.textContent = `${formatTimeKo(days)} UTC · 북반구 기준 계절`;
+    this.el.statusTime.textContent = `${formatTimeKo(days)} ${TIME_ZONE_LABEL_KO} · 북반구 기준 계절`;
     this.el.statusSeason.textContent = season.northernLabelKo;
     this.el.statusSeasonSouth.textContent = `남반구는 ${season.southernLabelKo}`;
     this.el.statusSeasonItem.classList.remove(
@@ -841,7 +844,7 @@ export class App {
         ? '달이 교점 근처에 있습니다.'
         : '달이 교점에서 멀리 떨어져 있습니다.';
     return (
-      `${formatDateKo(days)} UTC, 북반구는 ${season.northernLabelKo}이고 남반구는 ${season.southernLabelKo}입니다. ` +
+      `${formatDateKo(days)} ${TIME_ZONE_LABEL_KO}, 북반구는 ${season.northernLabelKo}이고 남반구는 ${season.southernLabelKo}입니다. ` +
       `태양은 ${formatSubsolar(subsolar.latitudeDeg)}를 비추고, ${pole} ` +
       `달은 ${phase.nameKo}이며 밝은 부분은 ${formatIllumination(phase)}입니다. ${node} ${eclipse.headlineKo}.`
     );
@@ -922,7 +925,7 @@ export class App {
   }
 
   private jumpSeason(kind: 'spring' | 'summer' | 'autumn' | 'winter'): void {
-    const year = daysToDate(this.store.state.time.days).getUTCFullYear();
+    const year = koreaYearForDays(this.store.state.time.days);
     const boundary = seasonBoundariesForYear(year).find((item) => item.kind === kind);
     if (!boundary) return;
     this.store.update((state) => {
@@ -931,6 +934,27 @@ export class App {
       state.factCard = null;
     });
     this.announce(`${boundary.labelKo} 지점으로 이동했습니다.`);
+  }
+
+  private jumpToNow(): void {
+    if (this.isTimeLocked) {
+      this.toast('먼저 예측을 제출하세요. 예측 전에는 시간이 잠겨 있습니다.');
+      return;
+    }
+    const currentDays = currentSimDays();
+    const days = clampSimDays(currentDays);
+    this.store.update((state) => {
+      state.time.days = days;
+      state.time.playing = false;
+      state.factCard = null;
+    });
+    const outOfRange = Math.abs(days - currentDays) > 1e-6;
+    this.toast(
+      outOfRange
+        ? '현재 시각이 모형 범위를 벗어나 가장 가까운 시각으로 이동했습니다.'
+        : '현재 시각으로 이동했습니다.',
+    );
+    this.announceScene();
   }
 
   private setView(view: ViewMode): void {
@@ -1267,7 +1291,7 @@ export class App {
     const season = seasonInfoForDays(state.time.days);
     const eclipse = this.getEclipse(state.time.days);
     this.announce(
-      `${prefix}${formatDateKo(state.time.days)} ${formatTimeKo(state.time.days)} UTC. ` +
+      `${prefix}${formatDateKo(state.time.days)} ${formatTimeKo(state.time.days)} ${TIME_ZONE_LABEL_KO}. ` +
         `북반구 ${season.northernLabelKo}, 달 ${phase.nameKo}, ${eclipse.headlineKo}.`,
     );
   }

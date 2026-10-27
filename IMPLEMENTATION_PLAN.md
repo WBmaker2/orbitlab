@@ -263,7 +263,8 @@ Keep these in one file with comments and sources. Do not scatter magic numbers.
 
 - Use a fixed epoch, e.g. 2026-03-20 00:00 UTC (March equinox).
 - `days` is a floating-point simulation day.
-- Display date by converting to a calendar; use UTC to avoid timezone bugs.
+- Display date by converting to a calendar; use UTC internally to avoid timezone bugs and show KST (Asia/Seoul) in the UI.
+- Start a first visit at the current KST date and time. Provide a "현재" timeline button to return to the current instant.
 - Speed presets: 1 hour/s, 1 day/s, 1 week/s, 1 month/s.
 - Clamp the date range to a few years around the epoch for the MVP.
 

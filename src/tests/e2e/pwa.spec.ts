@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { gzipSync } from 'node:zlib';
-import { bootWithCleanState, waitForApp } from './helpers';
+import { bootWithCleanState, currentKoreaDateText, waitForApp } from './helpers';
 
 const DIST = join(process.cwd(), 'dist');
 
@@ -60,7 +60,7 @@ test.describe('production build and PWA', () => {
     await page.reload();
     await waitForApp(page);
     await expect(page.locator('#topbar')).toContainText('OrbitLab');
-    await expect(page.locator('[data-ref="top-date"]')).toHaveText('2026년 3월 20일');
+    await expect(page.locator('[data-ref="top-date"]')).toHaveText(currentKoreaDateText());
     await context.setOffline(false);
   });
 });

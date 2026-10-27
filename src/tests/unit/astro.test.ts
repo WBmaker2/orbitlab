@@ -33,7 +33,16 @@ import {
   phaseNameForAngle,
 } from '../../astro/phases';
 import { seasonInfoForDays } from '../../astro/seasons';
-import { daysToDate, dateToDays, formatDateKo, seasonBoundariesForYear } from '../../astro/time';
+import {
+  currentSimDays,
+  daysToDate,
+  dateToDays,
+  formatDateKo,
+  formatDateTimeKo,
+  formatTimeKo,
+  koreaYearForDays,
+  seasonBoundariesForYear,
+} from '../../astro/time';
 import { observerSkyAt } from '../../astro/observer';
 import { eclipseStatusAt, findNearestSyzygy, syzygyAt } from '../../astro/eclipses';
 
@@ -53,7 +62,10 @@ function findDailyExtreme(
   for (let t = days - span; t <= days + span; t += step) {
     const sky = observerSkyAt(t);
     const altitude = sky.sun.altitudeDeg;
-    if ((kind === 'max' && altitude > bestAltitude) || (kind === 'min' && altitude < bestAltitude)) {
+    if (
+      (kind === 'max' && altitude > bestAltitude) ||
+      (kind === 'min' && altitude < bestAltitude)
+    ) {
       bestAltitude = altitude;
       bestAzimuth = sky.sun.azimuthDeg;
       best = t;
@@ -206,22 +218,24 @@ describe('Seasons', () => {
     expect(daysToDate(dateToDays(leapDay)).toISOString()).toBe(leapDay.toISOString());
     expect(formatDateKo(dateToDays(leapDay))).toContain('2028');
   });
+
+  it('displays calendar values in Korean standard time', () => {
+    const days = dateToDays(new Date(Date.UTC(2026, 2, 20, 0)));
+    expect(formatDateKo(days)).toBe('2026년 3월 20일');
+    expect(formatTimeKo(days)).toBe('09:00');
+    expect(formatDateTimeKo(days)).toBe('2026년 3월 20일 09:00 KST');
+    expect(koreaYearForDays(dateToDays(new Date(Date.UTC(2026, 11, 31, 16))))).toBe(2027);
+
+    const now = new Date();
+    expect(Math.abs(currentSimDays(now) - dateToDays(now))).toBeLessThan(1e-9);
+  });
 });
 
 describe('Earth observer', () => {
   it('sees a high noon Sun at the June solstice and a low noon Sun at December', () => {
-    const juneNoon = findDailyExtreme(
-      dateToDays(new Date(Date.UTC(2026, 5, 21, 3))),
-      'max',
-    );
-    const decemberNoon = findDailyExtreme(
-      dateToDays(new Date(Date.UTC(2026, 11, 21, 3))),
-      'max',
-    );
-    const equinoxNoon = findDailyExtreme(
-      dateToDays(new Date(Date.UTC(2026, 2, 20, 3))),
-      'max',
-    );
+    const juneNoon = findDailyExtreme(dateToDays(new Date(Date.UTC(2026, 5, 21, 3))), 'max');
+    const decemberNoon = findDailyExtreme(dateToDays(new Date(Date.UTC(2026, 11, 21, 3))), 'max');
+    const equinoxNoon = findDailyExtreme(dateToDays(new Date(Date.UTC(2026, 2, 20, 3))), 'max');
 
     expect(juneNoon.altitudeDeg).toBeCloseTo(75.9, 0);
     expect(decemberNoon.altitudeDeg).toBeCloseTo(29.0, 0);

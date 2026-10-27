@@ -1,9 +1,4 @@
-import {
-  EPOCH_UTC_MS,
-  MAX_SIM_DAYS,
-  MIN_SIM_DAYS,
-  SEASON_BOUNDARIES,
-} from './constants';
+import { EPOCH_UTC_MS, MAX_SIM_DAYS, MIN_SIM_DAYS, SEASON_BOUNDARIES } from './constants';
 import { clamp } from './geometry';
 
 const MS_PER_DAY = 86_400_000;
@@ -11,6 +6,9 @@ const MS_PER_DAY = 86_400_000;
 export const MINUTE_MS = 60_000;
 export const HOUR_MS = 3_600_000;
 export const DAY_MS = MS_PER_DAY;
+export const KOREA_TIME_ZONE = 'Asia/Seoul';
+export const KOREA_UTC_OFFSET_MS = 9 * HOUR_MS;
+export const TIME_ZONE_LABEL_KO = 'KST';
 
 export function daysToDate(days: number): Date {
   return new Date(EPOCH_UTC_MS + days * MS_PER_DAY);
@@ -29,21 +27,31 @@ export function clampSimDays(days: number): number {
   return clamp(days, MIN_SIM_DAYS, MAX_SIM_DAYS);
 }
 
+/** Current real-world instant expressed as simulation days. */
+export function currentSimDays(now: Date = new Date()): number {
+  return dateToDays(now);
+}
+
+/** Calendar year in Korean time, used for season markers and labels. */
+export function koreaYearForDays(days: number): number {
+  return new Date(daysToDate(days).getTime() + KOREA_UTC_OFFSET_MS).getUTCFullYear();
+}
+
 const dateFormatter = new Intl.DateTimeFormat('ko-KR', {
-  timeZone: 'UTC',
+  timeZone: KOREA_TIME_ZONE,
   year: 'numeric',
   month: 'long',
   day: 'numeric',
 });
 
 const shortDateFormatter = new Intl.DateTimeFormat('ko-KR', {
-  timeZone: 'UTC',
+  timeZone: KOREA_TIME_ZONE,
   month: 'long',
   day: 'numeric',
 });
 
 const timeFormatter = new Intl.DateTimeFormat('ko-KR', {
-  timeZone: 'UTC',
+  timeZone: KOREA_TIME_ZONE,
   hour: '2-digit',
   minute: '2-digit',
   hour12: false,
@@ -62,11 +70,7 @@ export function formatTimeKo(days: number): string {
 }
 
 export function formatDateTimeKo(days: number): string {
-  return `${formatDateKo(days)} ${formatTimeKo(days)} UTC`;
-}
-
-export function formatTimeUtcHhMm(days: number): string {
-  return formatTimeKo(days);
+  return `${formatDateKo(days)} ${formatTimeKo(days)} ${TIME_ZONE_LABEL_KO}`;
 }
 
 export function formatSignedDays(days: number): string {

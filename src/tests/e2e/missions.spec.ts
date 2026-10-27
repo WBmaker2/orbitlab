@@ -28,8 +28,10 @@ test.describe('missions', () => {
   test('locks time until the prediction is submitted', async ({ page }) => {
     const play = page.locator('#slot-time [data-ref="play"]');
     const range = page.locator('#slot-time input[type="range"]');
+    const now = page.locator('#slot-time [data-ref="now"]');
     await expect(play).toBeDisabled();
     await expect(range).toBeDisabled();
+    await expect(now).toBeDisabled();
     await expect(page.locator('#slot-time [data-ref="hint"]')).toContainText(
       '먼저 예측을 제출하면 시간을 움직일 수 있습니다',
     );
@@ -39,6 +41,7 @@ test.describe('missions', () => {
     await page.getByRole('button', { name: '예측 제출하고 장면 보기' }).click();
     await expect(play).toBeEnabled();
     await expect(range).toBeEnabled();
+    await expect(now).toBeEnabled();
     await expect(timelineDate(page)).toHaveText('2026년 6월 21일');
   });
 

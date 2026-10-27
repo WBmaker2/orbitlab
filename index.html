@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta
+      name="description"
+      content="OrbitLab은 지구의 자전·공전, 자전축 기울기, 달의 위상과 식 현상을 3D로 탐구하는 과학 수업 도구입니다."
+    />
+    <meta name="theme-color" content="#070b16" />
+    <meta name="color-scheme" content="dark" />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <link rel="apple-touch-icon" href="./icons/icon-192.png" />
+    <title>OrbitLab — 지구·달·태양 탐구실</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+        background: #070b16;
+        color: #e9effc;
+      }
+      .boot {
+        position: fixed;
+        inset: 0;
+        z-index: 100;
+        display: grid;
+        place-content: center;
+        justify-items: center;
+        gap: 10px;
+        background: radial-gradient(circle at 50% 42%, #0c1730 0%, #05080f 62%, #02040a 100%);
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+      }
+      .boot-logo {
+        position: relative;
+        width: 70px;
+        height: 70px;
+        margin-bottom: 8px;
+      }
+      .boot-ring {
+        position: absolute;
+        inset: 6px;
+        border: 2px solid rgba(255, 209, 102, 0.5);
+        border-radius: 50%;
+        transform: rotate(-24deg) scaleY(0.5);
+      }
+      .boot-sun {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 26px;
+        height: 26px;
+        margin: -13px;
+        border-radius: 50%;
+        background: radial-gradient(circle at 35% 35%, #fff5c2, #ffb020);
+        box-shadow: 0 0 30px rgba(255, 183, 60, 0.65);
+      }
+      .boot-planet {
+        position: absolute;
+        right: 5px;
+        top: 25px;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: #8dc4ff;
+        box-shadow: 0 0 14px rgba(110, 180, 255, 0.8);
+      }
+      .boot-title {
+        margin: 0;
+        font-size: 24px;
+        letter-spacing: 0.04em;
+        font-weight: 800;
+      }
+      .boot-sub {
+        margin: 0;
+        color: #8c9bb9;
+        font-size: 12px;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .boot-planet {
+          animation: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <div id="boot" class="boot" role="status" aria-live="polite">
+      <div class="boot-logo" aria-hidden="true">
+        <span class="boot-ring"></span>
+        <span class="boot-sun"></span>
+        <span class="boot-planet"></span>
+      </div>
+      <p class="boot-title">OrbitLab</p>
+      <p class="boot-sub">지구·달·태양 탐구실을 준비하고 있습니다</p>
+    </div>
+    <noscript>
+      <div style="position: fixed; inset: 0; display: grid; place-content: center; padding: 24px">
+        OrbitLab을 사용하려면 브라우저에서 JavaScript를 허용해야 합니다.
+      </div>
+    </noscript>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
